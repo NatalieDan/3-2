@@ -4,9 +4,10 @@ import geekbrains.CommonConstants;
 import geekbrains.Server.Authorization.AuthService;
 import geekbrains.Server.Authorization.InMemoryAuthServiceImpl;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,6 +64,12 @@ public class Server {
                 }
             }
         } else {
+            try (FileOutputStream out = new FileOutputStream("messagehistory.txt",true)) {
+                out.write(message.getBytes(StandardCharsets.UTF_8));
+                out.write('\n');
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             for(ClientHandler handler: connectedUsers) {
                 handler.sendMessage(message);
             }

@@ -2,6 +2,7 @@ package geekbrains.Server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -50,8 +51,18 @@ public class ClientHandler {
                 if (nickName != null) {
                     if (!server.isNickNameBusy(nickName)) {
                         sendMessage("/authok " + nickName);
+                        StringBuilder previousMessages = new StringBuilder();
+                        try (FileInputStream in = new FileInputStream("messagehistory.txt")) {
+                            int x;
+                            while ((x = in.read()) > -1) {
+                                previousMessages.append((char)x);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        sendMessage(previousMessages.toString());
                         this.nickName = nickName;
-                        server.broadcastMessage(nickName + " зашел в чат");
+                        server.broadcastMessage(nickName + " join the chat");
                         server.addConnectedUser(this);
                         return;
                     } else {
@@ -67,7 +78,7 @@ public class ClientHandler {
     private void readMessages() throws IOException {
         while (true) {
             String messageInChat = inputStream.readUTF();
-            System.out.println("от " + nickName + ": " + messageInChat);
+            System.out.println("from " + nickName + ": " + messageInChat);
             if(messageInChat.equals(ServerCommandConstants.SHUTDOWN)) {
                 return;
             }
@@ -85,7 +96,7 @@ public class ClientHandler {
 
     private void closeConnection() {
         server.disconnectUser(this);
-        server.broadcastMessage(nickName + " вышел из чата");
+        server.broadcastMessage(nickName + " left the chat");
         try {
             outputStream.close();
             inputStream.close();
